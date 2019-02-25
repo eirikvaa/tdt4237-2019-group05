@@ -5,7 +5,7 @@ from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, CreateView, FormView
 from django.contrib.auth import authenticate
-
+import re
 from .forms import SignUpForm, LoginForm
 
 from ratelimit.mixins import RatelimitMixin
@@ -49,10 +49,28 @@ class SignupView(CreateView):
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        username = form.cleaned_data["username"]
-        email = form.cleaned_data["email"]
+        user = form.save()
+
+        categories = form.cleaned_data["categories"]
+        user.profile.company = form.cleaned_data["company"]
+        user.profile.categories.add(*categories)
+
         password = form.cleaned_data["password1"]
-        user = User.objects.create_user(username, email, password)
+
+        if len(password) < 8:
+            form.add_error(None, "Password should be longer than 8")
+            return super().form_invalid(form)
+        if not re.match("[a-z]", password):
+            form.add_error(None, "You need at least one lowercase letter")
+            return super().form_invalid(form)
+        if not re.match("[A-Z]", password):
+            form.add_error(None, "You neet at least one uppercase letter in the password")
+            return super().form_invalid(form)
+        if not re.match("[!\"#$%&/()=?]", password):
+            form.add_error(None, "You need to at least one special character !\"#$%&/()=? in the password")
+            return super().form_invalid(form)
+
+
         user.save()
 
         login(self.request, user)

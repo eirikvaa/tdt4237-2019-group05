@@ -93,7 +93,7 @@ DATABASES = {
 
 
 PASSWORD_HASHERS = [
-    "user.passwords.CustomMD5PasswordHasher"
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher'
 ]
 
 # Login redirect
