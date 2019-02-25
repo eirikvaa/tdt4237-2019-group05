@@ -1,10 +1,10 @@
 from django.contrib.auth import login
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import User
 from django.contrib.sessions.backends.cache import SessionStore
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, CreateView, FormView
+from django.contrib.auth import authenticate
 
 from .forms import SignUpForm, LoginForm
 
@@ -24,13 +24,15 @@ class LoginView(FormView):
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        try:
-            password = make_password(form.cleaned_data["password"])
-            user = User.objects.raw("SELECT * FROM auth_user WHERE username='" + form.cleaned_data[
-            "username"] + "' AND password='" + password + "';")[0]
+        password = form.cleaned_data["password"]
+        username = form.cleaned_data["username"]
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
             login(self.request, user)
             return super().form_valid(form)
-        except IndexError:
+        else:
             form.add_error(None, "Provide a valid username and/or password")
             return super().form_invalid(form)
 
@@ -41,10 +43,12 @@ class SignupView(CreateView):
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        user = form.save()
-        user.profile.company = form.cleaned_data.get("company")
-        user.profile.categories.add(*form.cleaned_data["categories"])
+        username = form.cleaned_data["username"]
+        email = form.cleaned_data["email"]
+        password = form.cleaned_data["password1"]
+        user = User.objects.create_user(username, email, password)
         user.save()
+
         login(self.request, user)
 
         return HttpResponseRedirect(self.success_url)
