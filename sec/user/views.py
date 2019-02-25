@@ -8,6 +8,7 @@ from django.contrib.auth import authenticate
 
 from .forms import SignUpForm, LoginForm
 
+from ratelimit.mixins import RatelimitMixin
 
 class IndexView(TemplateView):
     template_name = "sec/base.html"
@@ -18,7 +19,12 @@ def logout(request):
     return HttpResponseRedirect(reverse_lazy("home"))
 
 
-class LoginView(FormView):
+class LoginView(RatelimitMixin, FormView):
+    ratelimit_key = 'ip'
+    ratelimit_method = 'POST'
+    ratelimit_rate = '3/m'
+    ratelimit_block = True
+
     form_class = LoginForm
     template_name = "user/login.html"
     success_url = reverse_lazy("home")
