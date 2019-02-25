@@ -43,10 +43,12 @@ class SignupView(CreateView):
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        username = form.cleaned_data["username"]
-        email = form.cleaned_data["email"]
-        password = form.cleaned_data["password1"]
-        user = User.objects.create_user(username, email, password)
+        user = form.save()
+
+        categories = form.cleaned_data["categories"]
+        user.profile.company = form.cleaned_data["company"]
+        user.profile.categories.add(*categories)
+
         user.save()
 
         login(self.request, user)
