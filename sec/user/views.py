@@ -43,10 +43,13 @@ class SignupView(CreateView):
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        username = form.cleaned_data["username"]
-        email = form.cleaned_data["email"]
-        password = form.cleaned_data["password1"]
+        user = form.save()
 
+        categories = form.cleaned_data["categories"]
+        user.profile.company = form.cleaned_data["company"]
+        user.profile.categories.add(*categories)
+
+        password = form.cleaned_data["password1"]
 
         if len(password) < 8:
             form.add_error(None, "Password should be longer than 8")
@@ -62,8 +65,6 @@ class SignupView(CreateView):
             return super().form_invalid(form)
 
 
-
-        user = User.objects.create_user(username, email, password)
         user.save()
 
         login(self.request, user)
