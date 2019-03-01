@@ -10,6 +10,7 @@ from .forms import SignUpForm, LoginForm
 
 from ratelimit.mixins import RatelimitMixin
 
+
 class IndexView(TemplateView):
     template_name = "sec/base.html"
 
@@ -60,16 +61,15 @@ class SignupView(CreateView):
         if len(password) < 8:
             form.add_error(None, "Password should be longer than 8")
             return super().form_invalid(form)
-        if not re.match("[a-z]", password):
+        if not re.match("(.*[a-z].*)", password):
             form.add_error(None, "You need at least one lowercase letter")
             return super().form_invalid(form)
-        if not re.match("[A-Z]", password):
+        if not re.match("(.*[A-Z].*)", password):
             form.add_error(None, "You neet at least one uppercase letter in the password")
             return super().form_invalid(form)
-        if not re.match("[!\"#$%&/()=?]", password):
+        if not re.match("(.*[!\"#$%&/()=?].*)", password):
             form.add_error(None, "You need to at least one special character !\"#$%&/()=? in the password")
             return super().form_invalid(form)
-
 
         user.save()
 
