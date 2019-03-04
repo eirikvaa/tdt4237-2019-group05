@@ -53,9 +53,12 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'ratelimit.middleware.RatelimitMiddleware',
     'sec.middleware.InformationMiddleware',
 ]
+
+X_FRAME_OPTIONS = 'DENY'
 
 ROOT_URLCONF = 'sec.urls'
 
