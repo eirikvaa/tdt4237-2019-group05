@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'ratelimit.middleware.RatelimitMiddleware',
     'sec.middleware.InformationMiddleware',
 ]
 
@@ -91,7 +92,7 @@ DATABASES = {
 
 
 PASSWORD_HASHERS = [
-    "user.passwords.CustomMD5PasswordHasher"
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher'
 ]
 
 # Login redirect

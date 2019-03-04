@@ -1,12 +1,15 @@
 from django.contrib.auth import login, logout
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.contrib.sessions.backends.cache import SessionStore
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, CreateView, FormView, RedirectView
-
+from django.contrib.auth import authenticate
+import re
 from .forms import SignUpForm, LoginForm
+
+from ratelimit.mixins import RatelimitMixin
 
 
 class IndexView(TemplateView):
@@ -21,19 +24,26 @@ class LogoutView(RedirectView):
         return super(LogoutView, self).get(request, *args, **kwargs)
 
 
-class LoginView(FormView):
+class LoginView(RatelimitMixin, FormView):
+    ratelimit_key = 'ip'
+    ratelimit_method = 'POST'
+    ratelimit_rate = '3/m'
+    ratelimit_block = True
+
     form_class = LoginForm
     template_name = "user/login.html"
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        try:
-            password = make_password(form.cleaned_data["password"])
-            user = User.objects.raw("SELECT * FROM auth_user WHERE username='" + form.cleaned_data[
-                "username"] + "' AND password='" + password + "';")[0]
+        password = form.cleaned_data["password"]
+        username = form.cleaned_data["username"]
+
+        user = authenticate(username=username, password=password)
+
+        if user is not None:
             login(self.request, user)
             return super().form_valid(form)
-        except IndexError:
+        else:
             form.add_error(None, "Provide a valid username and/or password")
             return super().form_invalid(form)
 
@@ -45,9 +55,28 @@ class SignupView(CreateView):
 
     def form_valid(self, form):
         user = form.save()
-        user.profile.company = form.cleaned_data.get("company")
-        user.profile.categories.add(*form.cleaned_data["categories"])
+
+        categories = form.cleaned_data["categories"]
+        user.profile.company = form.cleaned_data["company"]
+        user.profile.categories.add(*categories)
+
+        password = form.cleaned_data["password1"]
+
+        if len(password) < 8:
+            form.add_error(None, "Password should be longer than 8")
+            return super().form_invalid(form)
+        if not re.match("(.*[a-z].*)", password):
+            form.add_error(None, "You need at least one lowercase letter")
+            return super().form_invalid(form)
+        if not re.match("(.*[A-Z].*)", password):
+            form.add_error(None, "You neet at least one uppercase letter in the password")
+            return super().form_invalid(form)
+        if not re.match("(.*[!\"#$%&/()=?].*)", password):
+            form.add_error(None, "You need to at least one special character !\"#$%&/()=? in the password")
+            return super().form_invalid(form)
+
         user.save()
+
         login(self.request, user)
 
         return HttpResponseRedirect(self.success_url)

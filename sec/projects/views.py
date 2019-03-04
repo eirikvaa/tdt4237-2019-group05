@@ -155,7 +155,7 @@ def upload_file_to_task(request, project_id, task_id):
                     task_file.save()
 
                     st = os.stat(task_file.file.path)
-                    os.chmod(task_file.file.path, st.st_mode | stat.S_IEXEC) 
+                    os.chmod(task_file.file.path, st.st_mode | stat.S_IEXEC)
 
                     if request.user.profile != project.user and request.user.profile != accepted_task_offer.offerer:
                         teams = request.user.profile.teams.filter(task__id=task.id)
@@ -338,7 +338,6 @@ def task_view(request, project_id, task_id):
 
 
 @login_required
-@csrf_exempt
 def task_permissions(request, project_id, task_id):
     user = request.user
     task = Task.objects.get(pk=task_id)
