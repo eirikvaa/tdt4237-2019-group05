@@ -17,7 +17,7 @@ class IndexView(TemplateView):
 
 
 class LogoutView(RedirectView):
-    pattern_name = "home"
+    pattern_name = "login"
 
     def get(self, request, *args, **kwargs):
         logout(request)
