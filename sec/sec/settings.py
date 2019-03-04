@@ -14,7 +14,6 @@ import logging
 import os
 import sys
 
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -49,7 +48,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'sec.middleware.SimpleSessionMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -99,6 +98,17 @@ PASSWORD_HASHERS = [
 # Login redirect
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
+
+""" Sessions """
+
+SESSION_COOKIE_AGE = 1209600  # (default)
+# SESSION_COOKIE_SECURE = False    # Sets the SECURE flag on the session cookie (forces HTTPS on cookies)
+SESSION_COOKIE_HTTPONLY = False  # Prevents client side scripting accessing the cookie (through document.cookie)
+SESSION_SAVE_EVERY_REQUEST = True  # Renew session on every request
+
+""" SSL """
+# SECURE_SSL_REDIRECT = True # Redirects to HTTPS if http protocol is requested
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/

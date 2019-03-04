@@ -1,8 +1,9 @@
+from django.contrib.auth import login, logout
 from django.contrib.auth import login
 from django.contrib.sessions.backends.cache import SessionStore
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, CreateView, FormView
+from django.views.generic import TemplateView, CreateView, FormView, RedirectView
 from django.contrib.auth import authenticate
 from .forms import SignUpForm, LoginForm
 
@@ -13,9 +14,12 @@ class IndexView(TemplateView):
     template_name = "sec/base.html"
 
 
-def logout(request):
-    request.session = SessionStore()
-    return HttpResponseRedirect(reverse_lazy("home"))
+class LogoutView(RedirectView):
+    pattern_name = "login"
+
+    def get(self, request, *args, **kwargs):
+        logout(request)
+        return super(LogoutView, self).get(request, *args, **kwargs)
 
 
 class LoginView(RatelimitMixin, FormView):
