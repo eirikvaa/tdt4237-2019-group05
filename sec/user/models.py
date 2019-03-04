@@ -18,6 +18,8 @@ class Profile(models.Model):
     country = models.TextField(max_length=50, blank=True)
     categories = models.ManyToManyField('projects.ProjectCategory', related_name='competance_categories')
     session = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, default=None, null=True)
+    security_question = models.TextField(max_length=254, blank=False)
+    security_question_answer = models.TextField(max_length=254, blank=False)
 
     def __str__(self):
         return self.user.username

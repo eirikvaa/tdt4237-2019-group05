@@ -1,18 +1,23 @@
-from django.contrib.auth import login, logout
+import os
+
+from django.contrib.auth import logout
 from django.contrib.auth import login
 from django.contrib.auth.models import User
-from django.contrib.sessions.backends.cache import SessionStore
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, CreateView, FormView, RedirectView
 from django.contrib.auth import authenticate
 from django.core.mail import EmailMessage
-from .forms import SignUpForm, LoginForm
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from .tokens import account_activation_token
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_text
+
+from user.models import Profile
+from .forms import SignUpForm, LoginForm, SecurityQuestionForm, UserEmailForm
+from django.shortcuts import render
+from django.urls import reverse
 
 from ratelimit.mixins import RatelimitMixin
 
@@ -58,13 +63,14 @@ class SignupView(CreateView):
     template_name = "user/signup.html"
     success_url = reverse_lazy("home")
 
-
     def form_valid(self, form):
         user = form.save()
 
         categories = form.cleaned_data["categories"]
         user.profile.company = form.cleaned_data["company"]
         user.profile.categories.add(*categories)
+        user.profile.security_question = form.cleaned_data["security_question"]
+        user.profile.security_question_answer = form.cleaned_data["security_question_answer"]
 
         user.is_active = False
 
@@ -100,3 +106,52 @@ def activate(request, uidb64, token):
         return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
     else:
         return HttpResponse('Activation link is invalid!')
+
+
+class UserEmailView(TemplateView):
+    form_class = UserEmailForm
+    template_name = "user/user_email.html"
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            email = form['email'].value()
+            url = reverse('sec_question', kwargs={'email': email})
+            return HttpResponseRedirect(url)
+
+        return render(request, self.template_name, {'form': form})
+
+
+class SecurityQuestionView(TemplateView, FormView):
+    form_class = SecurityQuestionForm
+    template_name = "user/sec_question.html"
+    answer = ""
+
+    def get(self, request, *args, **kwargs):
+        user = User.objects.get(email=kwargs['email'])
+        profile = Profile.objects.get(user=user)
+        self.answer = profile.security_question_answer
+        initial = {'question': profile.security_question}
+        form = self.form_class(initial=initial)
+        return render(request, self.template_name, {'form': form})
+
+    def form_valid(self, form):
+        path = self.request.META['PATH_INFO']
+        email = os.path.basename(os.path.normpath(path))
+        user = User.objects.get(email=email)
+        print(user.profile.security_question_answer)
+
+        correct_answer = user.profile.security_question_answer
+        entered_answer = form.cleaned_data['answer']
+
+        if form.is_valid():
+            if correct_answer == entered_answer:
+                return HttpResponseRedirect(reverse('password_reset'))
+            else:
+                initial = {'question': user.profile.security_question}
+                form = self.form_class(initial=initial)
+                return render(self.request, self.template_name, {'form': form})

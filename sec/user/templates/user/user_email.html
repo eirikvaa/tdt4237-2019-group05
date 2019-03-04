@@ -1,0 +1,14 @@
+{% extends 'sec/base.html' %}
+{% load bootstrap4 %}
+
+{% block title %}Email{% endblock %}
+
+{% block content %}
+    <h2>Email</h2>
+    <p>Please verify the answer to your security question to proceed.</p>
+    <form method="post">
+        {% csrf_token %}
+        {% bootstrap_form form %}
+        <button type="submit">Continue to security question</button>
+    </form>
+{% endblock %}

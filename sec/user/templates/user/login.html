@@ -9,7 +9,7 @@
         {% csrf_token %}
         {% bootstrap_form form %}
         <button type="submit">Login</button>
-        <a href="{% url 'password_reset' %}">
+        <a href="{% url 'user_email' %}">
             Forgot password
         </a>
     </form>
