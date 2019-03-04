@@ -49,6 +49,8 @@
                     <a role="button" href="/profile">Settings</a>
                 -->
                 <a class="btn btn-link my-2 my-sm-0" href="{% url 'logout' %}" role="button">Sign out</a>
+                                <a class="btn btn-link my-2 my-sm-0" href="{% url 'password_reset' %}" role="button">Reset password</a>
+
             {% else %}
                 <a role="button" class="btn btn-link my-sm-0 mr-2" href="{% url 'signup' %}">Sign up</a>
                 <a role="button" class="btn btn-outline-primary my-2 my-sm-0" href="{% url 'login' %}">Sign in</a>
