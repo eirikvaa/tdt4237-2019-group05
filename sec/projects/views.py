@@ -378,6 +378,17 @@ def task_permissions(request, project_id, task_id):
 
 @login_required
 def delete_file(request, file_id):
-    f = TaskFile.objects.get(pk=file_id)
-    f.delete()
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    user = request.user
+    try:
+        task_file = TaskFile.objects.get(pk=file_id)
+    except Exception:
+        # Task file not found
+        return redirect("login")
+
+    access = get_user_task_permissions(user, task_file.task)
+    if access["write"] or access["modify"] or access["owner"]:
+        task_file.delete()
+        return redirect('task_view', task_file.task.project.id, task_file.task.id)
+    else:
+        # No access
+        return redirect("login")
