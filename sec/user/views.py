@@ -10,6 +10,8 @@ from django.contrib.auth import authenticate
 from django.core.mail import EmailMessage
 from django.http import HttpResponse
 from django.template.loader import render_to_string
+
+from user.RandomPasswordGenerator import RandomPasswordGenerator
 from .tokens import account_activation_token
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_text
@@ -140,17 +142,35 @@ class SecurityQuestionView(TemplateView, FormView):
         return render(request, self.template_name, {'form': form})
 
     def form_valid(self, form):
+        # Get the email by parsing the path
         path = self.request.META['PATH_INFO']
         email = os.path.basename(os.path.normpath(path))
-        user = User.objects.get(email=email)
-        print(user.profile.security_question_answer)
 
+        user = User.objects.get(email=email)
         correct_answer = user.profile.security_question_answer
         entered_answer = form.cleaned_data['answer']
 
         if form.is_valid():
             if correct_answer == entered_answer:
-                return HttpResponseRedirect(reverse('password_reset'))
+                # Make sure we adhere to the password rules defined in 'settings.py'.
+                random_password = RandomPasswordGenerator.generate(9)
+
+                # Send forgot password email
+                message = render_to_string('user/forgot_password_email.html', {
+                    'user': user,
+                    'random_password': random_password
+                })
+
+                # Update to the new random password so the user can log into with it
+                # and then replace the password with a choice of his/her own
+                user.set_password(random_password)
+                user.save()
+
+                email = EmailMessage(
+                    "Confirm email", message, to=[email]
+                )
+                email.send()
+                return HttpResponseRedirect(reverse('login'))
             else:
                 initial = {'question': user.profile.security_question}
                 form = self.form_class(initial=initial)

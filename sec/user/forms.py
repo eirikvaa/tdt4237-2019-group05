@@ -3,8 +3,6 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from projects.models import ProjectCategory
 
-from user.models import Profile
-
 
 class SignUpForm(UserCreationForm):
     company = forms.CharField(max_length=30, required=False, help_text='Here you can add your company.')
@@ -37,6 +35,14 @@ class LoginForm(forms.Form):
 
 class UserEmailForm(forms.Form):
     email = forms.EmailField(required=True)
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if User.objects.filter(email=cleaned_data['email']).count() == 0:
+            self.add_error('email', 'Email does not correspond to any user.')
+
+        return cleaned_data
 
 
 class SecurityQuestionForm(forms.Form):
