@@ -14,6 +14,9 @@ class SignUpForm(UserCreationForm):
     postal_code = forms.CharField(max_length=50)
     country = forms.CharField(max_length=50)
 
+    security_question = forms.CharField(max_length=254)
+    security_question_answer = forms.CharField(max_length=254)
+
     email = forms.EmailField(max_length=254, help_text='Inform a valid email address.')
     categories = forms.ModelMultipleChoiceField(queryset=ProjectCategory.objects.all(),
                                                 help_text='Hold down "Control", or "Command" on a Mac, to select more than one.',
@@ -28,3 +31,24 @@ class SignUpForm(UserCreationForm):
 class LoginForm(forms.Form):
     username = forms.CharField(required=True)
     password = forms.CharField(required=True, widget=forms.TextInput(attrs={"type": "password"}))
+
+
+class UserEmailForm(forms.Form):
+    email = forms.EmailField(required=True)
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        if User.objects.filter(email=cleaned_data['email']).count() == 0:
+            self.add_error('email', 'Email does not correspond to any user.')
+
+        return cleaned_data
+
+
+class SecurityQuestionForm(forms.Form):
+    question = forms.CharField(required=True, disabled=True, initial="Security question")
+    answer = forms.CharField(required=True)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        return cleaned_data
