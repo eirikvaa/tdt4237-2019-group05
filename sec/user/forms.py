@@ -52,3 +52,39 @@ class SecurityQuestionForm(forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         return cleaned_data
+
+
+class ConfirmTemporaryPasswordAndCreateNewPasswordForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        self.password = args[1]
+        super(ConfirmTemporaryPasswordAndCreateNewPasswordForm, self).__init__(*args, **kwargs)
+
+    temporaryPassword = forms.CharField(required=True, widget=forms.TextInput(attrs={"type": "password"}),
+                                        label="Temporary Password"
+                                        )
+    newPassword = forms.CharField(required=True, widget=forms.TextInput(attrs={"type": "password"}),
+                                  label="New password")
+
+    newPasswordRepeat = forms.CharField(required=True, widget=forms.TextInput(attrs={"type": "password"}),
+                                        label="Repeat New password")
+
+    def clean(self):
+        cleaned_data = super(ConfirmTemporaryPasswordAndCreateNewPasswordForm, self).clean()
+
+        if len(cleaned_data) == 0:
+            return {}
+
+        input_temporary = cleaned_data['temporaryPassword']
+        input_password = cleaned_data['newPassword']
+        input_password_repeat = cleaned_data['newPasswordRepeat']
+
+        if input_temporary != self.password:
+            print("Feil tmp")
+            self.add_error('temporaryPassword', 'Temporary password is wrong.')
+
+        if input_password != input_password_repeat:
+            print("Feil her også")
+            self.add_error('newPassword', 'New and repeated password must be the same.')
+            self.add_error('newPasswordRepeat', 'New and repeated password must be the same.')
+
+        return cleaned_data
