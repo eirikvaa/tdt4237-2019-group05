@@ -17,7 +17,8 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_text
 
 from user.models import Profile
-from .forms import SignUpForm, LoginForm, SecurityQuestionForm, UserEmailForm
+from .forms import SignUpForm, LoginForm, SecurityQuestionForm, UserEmailForm, \
+    ConfirmTemporaryPasswordAndCreateNewPasswordForm
 from django.shortcuts import render
 from django.urls import reverse
 
@@ -161,17 +162,36 @@ class SecurityQuestionView(TemplateView, FormView):
                     'random_password': random_password
                 })
 
-                # Update to the new random password so the user can log into with it
-                # and then replace the password with a choice of his/her own
-                user.set_password(random_password)
-                user.save()
-
-                email = EmailMessage(
+                _email = EmailMessage(
                     "Confirm email", message, to=[email]
                 )
-                email.send()
-                return HttpResponseRedirect(reverse('login'))
+                _email.send()
+                self.request.session['email'] = email
+                self.request.session['password'] = random_password
+                return HttpResponseRedirect(reverse('conf_new_password'))
             else:
                 initial = {'question': user.profile.security_question}
                 form = self.form_class(initial=initial)
                 return render(self.request, self.template_name, {'form': form})
+
+
+class ConfirmTemporaryPasswordAndCreateNewPassword(TemplateView, FormView):
+    form_class = ConfirmTemporaryPasswordAndCreateNewPasswordForm
+    template_name = "../../user/templates/user/confirm_temporary_password_and_create_new_password.html"
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, self.request.session['password'])
+        return render(self.request, self.template_name, {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST, self.request.session['password'])
+
+        if form.is_valid():
+            cleaned_data = form.cleaned_data
+            email = request.session['email']
+            user = User.objects.get(email=email)
+            user.set_password(cleaned_data['newPassword'])
+            user.save()
+            return HttpResponseRedirect(reverse('login'))
+        else:
+            return render(self.request, self.template_name, {'form': form})
