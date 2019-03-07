@@ -16,6 +16,7 @@ server {
 		root /home/www-data/groupXX/;
 		
 		location ~ (\.py|\.sh) {
+		    try_files $uri =404;
 			gzip off;
 			fastcgi_pass unix:/var/run/fcgiwrap.socket;
 			include /etc/nginx/fastcgi_params;
