@@ -1,4 +1,5 @@
 import os
+import time
 
 from django.contrib.auth import logout
 from django.contrib.auth import login
@@ -57,6 +58,8 @@ class LoginView(RatelimitMixin, FormView):
             login(self.request, user)
             return super().form_valid(form)
         else:
+            f = open("login_attempts_log.txt", "a")
+            f.write("Login attempt for user: " + username + " at timestamp: " + str(time.time()) + "\n")
             form.add_error(None, "Provide a valid username and/or password")
             return super().form_invalid(form)
 
