@@ -17,7 +17,6 @@ class Profile(models.Model):
     postal_code = models.TextField(max_length=50, blank=True)
     country = models.TextField(max_length=50, blank=True)
     categories = models.ManyToManyField('projects.ProjectCategory', related_name='competance_categories')
-    session = models.ForeignKey(Session, on_delete=models.SET_NULL, blank=True, default=None, null=True)
     security_question = models.TextField(max_length=254, blank=False)
     security_question_answer = models.TextField(max_length=254, blank=False)
 
@@ -30,13 +29,3 @@ def update_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
     instance.profile.save()
-
-
-@receiver(user_logged_in)
-def update_session(sender, request, **kwargs):
-    if request.user.profile.session is not None:
-        request.session = SessionStore(session_key=request.user.profile.session.session_key)
-        request.session.modified = True
-    else:
-        request.user.profile.session_id = request.session.session_key
-        request.user.profile.save()
