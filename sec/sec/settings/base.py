@@ -24,9 +24,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '$n%^#g%qx#82w6t^dvjqwv)q*1cy+fwh1ohku7-rbjqcei2^jr'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '0.0.0.0']
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -58,6 +58,7 @@ MIDDLEWARE = [
     'sec.middleware.InformationMiddleware',
 ]
 
+# for preventing clickjacking
 X_FRAME_OPTIONS = 'DENY'
 
 ROOT_URLCONF = 'sec.urls'
@@ -102,17 +103,6 @@ PASSWORD_HASHERS = [
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'home'
 
-""" Sessions """
-
-SESSION_COOKIE_AGE = 1209600  # (default)
-# SESSION_COOKIE_SECURE = False    # Sets the SECURE flag on the session cookie (forces HTTPS on cookies)
-SESSION_COOKIE_HTTPONLY = False  # Prevents client side scripting accessing the cookie (through document.cookie)
-SESSION_SAVE_EVERY_REQUEST = True  # Renew session on every request
-
-""" SSL """
-# SECURE_SSL_REDIRECT = True # Redirects to HTTPS if http protocol is requested
-
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 
@@ -133,12 +123,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-try:
-    from .local_settings import *
-except ModuleNotFoundError:
-    logging.getLogger(__name__).critical("Local settings are not defined")
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {

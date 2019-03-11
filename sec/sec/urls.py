@@ -2,7 +2,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
-from sec import settings
+from . import settings
 
 urlpatterns = [
     path('', include('home.urls')),
