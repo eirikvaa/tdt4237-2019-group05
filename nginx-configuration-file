@@ -1,6 +1,7 @@
 server {
 	listen 40XX;
 	index index.html;
+    add_header X-Content-Type-Options nosniff;
 
 	location / {
 		proxy_redirect off;
