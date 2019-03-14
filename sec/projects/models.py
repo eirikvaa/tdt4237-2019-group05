@@ -110,7 +110,8 @@ class Team(models.Model):
 
 
 def directory_path(instance, filename):
-    return 'uploads/tasks/{0}/{1}'.format(instance.task.id, filename)
+    intermediary_folder = os.urandom(32).hex()
+    return 'uploads/tasks/{0}/{1}/{2}'.format(instance.task.id, intermediary_folder, filename)
 
 
 class TaskFile(models.Model):
